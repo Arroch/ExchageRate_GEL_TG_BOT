@@ -52,7 +52,7 @@ def get_usd_tinkoff(token: str, figi: str ='BBG0013HGFT4') -> str:
         return str(candlusd.close.units) + '.' + str(candlusd.close.nano)[:4] + " (Биржа закрыта)"
 
 
-def get_rate() -> tuple[str]:
+def get_rate() -> tuple[str, str, str]:
     korona_gel = get_page(
         'https://koronapay.com/transfers/online/api/transfers/tariffs?sendingCountryId=RUS&sendingCurrencyId=810&receivingCountryId=GEO&receivingCurrencyId=981&paymentMethod=debitCard&receivingAmount=100&receivingMethod=cash&paidNotificationEnabled=true')
     korona_usd = get_page(
