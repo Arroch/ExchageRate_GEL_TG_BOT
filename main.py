@@ -25,6 +25,7 @@ with open('tokens.json', 'r') as file:
 def get_page(url: str) -> tuple:
     s = requests.Session()
     response = s.get(url=url, headers=headers)
+    print(response.status_code)
     return response.status_code, response.json()
 
 
@@ -48,19 +49,39 @@ def get_usd_tinkoff(token: str, figi: str ='BBG0013HGFT4') -> str:
             candleusd = client.get_all_candles(figi=figi, from_=datetime(now().year, now().month, now().day, 15, 59,
                                                                          tzinfo=timezone.utc),
                                                interval=CandleInterval.CANDLE_INTERVAL_1_MIN)
-            candlusd = next(candleusd)
+            try:
+                candlusd = next(candleusd)
+            except Exception as e:
+                print(e)
+                return 'Error'
         return str(candlusd.close.units) + '.' + str(candlusd.close.nano)[:4] + " (Биржа закрыта)"
 
 
 def get_rate() -> tuple[str, str, str]:
-    korona_gel = get_page(
-        'https://koronapay.com/transfers/online/api/transfers/tariffs?sendingCountryId=RUS&sendingCurrencyId=810&receivingCountryId=GEO&receivingCurrencyId=981&paymentMethod=debitCard&receivingAmount=100&receivingMethod=cash&paidNotificationEnabled=true')
-    korona_usd = get_page(
+    try:
+        korona_gel = get_page(
+            'https://koronapay.com/transfers/online/api/transfers/tariffs?sendingCountryId=RUS&sendingCurrencyId=810&receivingCountryId=GEO&receivingCurrencyId=981&paymentMethod=debitCard&receivingAmount=100&receivingMethod=cash&paidNotificationEnabled=true')
+    except Exception as e:
+        korona_gel = "Error"
+        print("korona_gel Exception", e)
+    try:
+        korona_usd = get_page(
         'https://koronapay.com/transfers/online/api/transfers/tariffs?sendingCountryId=RUS&sendingCurrencyId=810&receivingCountryId=GEO&receivingCurrencyId=840&paymentMethod=debitCard&receivingAmount=100&receivingMethod=cash&paidNotificationEnabled=true')
-    unistream_usd = get_page(
-        'https://online.unistream.ru/card2cash/calculate?destination=GEO&amount=1&currency=USD&accepted_currency=RUB&profile=unistream')
-    unistream_gel = get_page(
-        'https://online.unistream.ru/card2cash/calculate?destination=GEO&amount=10&currency=GEL&accepted_currency=RUB&profile=unistream')
+    except Exception as e:
+        korona_usd = "Error"
+        print("korona_usd Exception", e)
+    try:
+        unistream_usd = get_page(
+            'https://online.unistream.ru/card2cash/calculate?destination=GEO&amount=1&currency=USD&accepted_currency=RUB&profile=unistream')
+    except Exception as e:
+        unistream_usd = "Error"
+        print("unistream_usd Exception", e)
+    try:
+        unistream_gel = get_page(
+            'https://online.unistream.ru/card2cash/calculate?destination=GEO&amount=10&currency=GEL&accepted_currency=RUB&profile=unistream')
+    except Exception as e:
+        unistream_gel = "Error"
+        print("unistream_gel Exception", e)
 
     korona_list = ["koronapay:", "GEL", " ", "USD", " "]
     unistream_list = ["unistream:", "GEL", " ", "USD", " "]
@@ -136,7 +157,7 @@ def send_rate(message):
             json.dump(followers_id, file, indent=4, ensure_ascii=False)
     else:
         mess = 'Бот находится на стадии разработки. Курс приходит автоматически в случайное время с пн-пт по запросу админа, в дальнейшем можно будет настроить частоту присылаемых сообщений. Пожалуйста ожидайте новое сообщение с курсом. Спасибо)'
-        bot.send_message(message.chat.id, mess)
+        bot.send_message(message.chat.id, mess) 
 
 
 bot.polling(non_stop=True)
